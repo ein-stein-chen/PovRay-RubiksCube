@@ -3,6 +3,7 @@
 
 // Debuging Variblen
 #declare Debug_Init = 1;
+#declare Debug_RotateLevel = 1;
 
 // Statische Variablen
 #declare SEITE_RECHTS = 0;
@@ -167,15 +168,19 @@
                 #declare Cube[I] = Grundstruktur[X][Y][Z]
                 
                 #declare CubeArrangement[X][Y][Z] = I;
-                #debug "Cube Nr:"
-                #debug str(CubeArrangement[X][Y][Z],3,0)
-                #debug "  \n"
-                #debug str(X,0,0)
-                #debug " - "
-                #debug str(Y,0,0)
-                #debug " - "
-                #debug str(Z,0,0)
-                #debug "  \n"
+                
+                #if(Debug_Init)
+                    #debug "Cube Nr:"
+                    #debug str(CubeArrangement[X][Y][Z],3,0)
+                    #debug "  \n"
+                    #debug str(X,0,0)
+                    #debug " - "
+                    #debug str(Y,0,0)
+                    #debug " - "
+                    #debug str(Z,0,0)
+                    #debug "  \n"
+                #end
+                
                 #declare I = I + 1;
             #end
         #end
@@ -267,6 +272,114 @@
     Binden(Cube,CubeArrangement)
 #end
 
+// Rotiert einen Einzelnen Würfel, Benötigt dafür die Würfel ID, die Rotations-Achse und ob Mit oder Gegen den Uhrzeigersinn
+#macro RotateCube(Number, Direktion, Rotation)
+    #declare Cube [Number] = object {
+        Cube[Number]
+        #switch(Direktion)
+        #case (0)
+            rotate <0,0,Rotation * 90>
+        #break
+        #case (1)
+            rotate <Rotation * 90,0,0>
+        #break
+        #case (2)
+            rotate <0,Rotation * 90,0>
+        #break
+        #end
+    }
+#end
+
+// Liefert den X,Y,Z Array-Index eines Würfels bei Angaben von A,B, der Seite und Entfernung zum 2,2,2 Eck-Würfel der in der Mitte des Bildschirmes liegt
+#macro Location(X,Y,Z,A,B,Seite,Entfernung)
+    #switch (SPALTE[Seite][Entfernung])
+            #case (0)
+                #declare X = A;
+                #declare Y = B;
+                #declare Z = 2;
+            #break
+            #case (1)
+                #declare X = A;
+                #declare Y = B;
+                #declare Z = 1;
+            #break
+                #case (2)
+                #declare X = A;
+                #declare Y = B;
+                #declare Z = 0;
+            #break
+            
+            #case (3)
+                #declare X = 2;
+                #declare Y = A;
+                #declare Z = B;
+            #break
+            #case (4)
+                #declare X = 1;
+                #declare Y = A;
+                #declare Z = B;
+            #break
+            #case (5)
+                #declare X = 0;
+                #declare Y = A;
+                #declare Z = B;
+            #break
+            
+            #case (6)
+                #declare X = A;
+                #declare Y = 2;
+                #declare Z = B;
+            #break
+            #case (7)
+                #declare X = A;
+                #declare Y = 1;
+                #declare Z = B;
+            #break
+            #case (8)
+                #declare X = A;
+                #declare Y = 0;
+                #declare Z = B;
+            #break
+        #end
+#end
+
+
+#macro RotateLevel(Seite,Entfernung, Rotation, CubeArrangement)
+    #for(A, 0, 2, 1)
+        #for(B, 0, 2, 1)
+            #declare X = -1;
+            #declare Y = -1;
+            #declare Z = -1;
+            Location(X,Y,Z,A,B,Seite,Entfernung)
+            
+            #if(Debug_RotateLevel)
+                #debug "\n"
+                #debug "Rotation: \n"
+                #debug str(X,0,0)
+                #debug " - "
+                #debug str(Y,0,0)
+                #debug " - "
+                #debug str(Z,0,0)
+                #debug "  \n"
+                #debug str(CubeArrangement[X][Y][Z],0,0)
+            #end
+            
+            RotateCube(CubeArrangement[X][Y][Z],Seite, Rotation)
+        #end
+    #end
+    //#debug "\n"
+    //UpdateCubeArrangement(Seite, Entfernung,Rotation,CubeArrangement)
+    //#debug "\n\n"
+#end
+
 Init(Cube,CubeArrangement)
 
+#declare X = -1;
+#declare Y = -1;
+#declare Z = -1;
+
+RotateLevel(SEITE_OBEN,0,ROTATION_CLOCK,CubeArrangement)
 Anzeigen_Cube()
+
+
+
