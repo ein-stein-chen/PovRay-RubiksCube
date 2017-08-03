@@ -4,6 +4,7 @@
 // Debuging Variblen
 #declare Debug_Init = 1;
 #declare Debug_RotateLevel = 1;
+#declare Debug_UpdateCubeArrangement = 1;
 
 // Statische Variablen
 #declare SEITE_RECHTS = 0;
@@ -56,12 +57,15 @@
 // Speichert für jede Position die Würfel ID, des momentan dort sitzenden Würfels
 #declare CubeArrangement = array[3][3][3]
 
+// Cache zur Zwischenspeicherung der Würfel IDs zur Rotierung
+#declare Cache = array[3][3]
+
 // Initialisiert die Umgebung
 #macro InitSetting()
     #debug "Initialisiere Setting \n"
     camera {
         //orthographic
-        location <6,7,6>
+        location <6,0,6>
         look_at <0,0,0>
     }
 
@@ -79,13 +83,13 @@
         color rgb <0.5,0.5,0.5>
     }
 
-    /*
+    
     plane {
-        <0,1,0>,-1.5
+        <0,1,0>,-2.2
         pigment {White}
         rotate <0,0,0>
     }
-    */
+    
 #end
 
 
@@ -293,6 +297,7 @@
     }
 #end
 
+
 // Liefert den X,Y,Z Array-Index eines Würfels bei Angaben von A,B, der Seite und Entfernung zum 2,2,2 Eck-Würfel der in der Mitte des Bildschirmes liegt
 #macro Location(X,Y,Z,A,B,Seite,Entfernung)
     #switch (SPALTE[Seite][Entfernung])
@@ -346,6 +351,196 @@
         #end
 #end
 
+#macro RotateCache(A,B,ANEW,BNEW,Rotation)
+    #if (Rotation = 1)
+    #switch (A)
+        #case (0)
+            #switch (B)
+                #case (0)
+                    #declare ANEW = A;
+                    #declare BNEW = B + 2;
+                #break
+                #case (1)
+                    #declare ANEW = A + 1;
+                    #declare BNEW = B + 1;
+                #break
+                #case (2)
+                    #declare ANEW = A + 2;
+                    #declare BNEW = B;
+                #break
+            #end
+        #break
+        #case (1)
+            #switch (B)
+                #case (0)
+                    #declare ANEW = A - 1;
+                    #declare BNEW = B + 1;
+                #break
+                #case (1)
+                    #declare ANEW = A;
+                    #declare BNEW = B;
+                #break
+                #case (2)
+                    #declare ANEW = A + 1;
+                    #declare BNEW = B - 1;
+                #break
+            #end
+        #break
+        #case (2)
+            #switch (B)
+                #case (0)
+                    #declare ANEW = A - 2;
+                    #declare BNEW = B;
+                #break
+                #case (1)
+                    #declare ANEW = A - 1;
+                    #declare BNEW = B - 1;
+                #break
+                #case (2)
+                    #declare ANEW = A;
+                    #declare BNEW = B - 2;
+                #break
+            #end
+        #break
+    #end
+    #else
+    #switch (A)
+        #case (0)
+            #switch (B)
+                #case (0)
+                    #declare ANEW = A + 2;
+                    #declare BNEW = B;
+                #break
+                #case (1)
+                    #declare ANEW = A + 1;
+                    #declare BNEW = B - 1;
+                #break
+                #case (2)
+                    #declare ANEW = A;
+                    #declare BNEW = B - 2;
+                #break
+            #end
+        #break
+        #case (1)
+            #switch (B)
+                #case (0)
+                    #declare ANEW = A + 1;
+                    #declare BNEW = B + 1;
+                #break
+                #case (1)
+                    #declare ANEW = A;
+                    #declare BNEW = B;
+                #break
+                #case (2)
+                    #declare ANEW = A - 1;
+                    #declare BNEW = B - 1;
+                #break
+            #end
+        #break
+        #case (2)
+            #switch (B)
+                #case (0)
+                    #declare ANEW = A;
+                    #declare BNEW = B + 2;
+                #break
+                #case (1)
+                    #declare ANEW = A - 1;
+                    #declare BNEW = B + 1;
+                #break
+                #case (2)
+                    #declare ANEW = A - 2;
+                    #declare BNEW = B;
+                #break
+            #end
+        #break
+    #end
+    
+    #end
+#end
+
+#macro UpdateCubeArrangement(Seite,Entfernung, Rotation, CubeArrangement,Cache)
+    
+    #if(Debug_UpdateCubeArrangement)
+        #debug "\n"
+        #debug "Schreibe in Cache\n"
+    #end
+    
+    #for(A, 0, 2, 1)
+        #for(B, 0, 2, 1)
+            #declare X = -1;
+            #declare Y = -1;
+            #declare Z = -1;
+            #declare ANEW = -1;
+            #declare BNEW = -1;
+            RotateCache(A,B,ANEW,BNEW,Rotation)
+            Location(X,Y,Z,A,B,Seite,Entfernung)
+            #debug "Cube Nr:"
+            #debug str(CubeArrangement[X][Y][Z],3,0)
+            #debug "\n"
+            #debug str(A,0,0)
+            #debug str(B,0,0)
+            #debug " --> "
+            #debug str(ANEW,0,0)
+            #debug str(BNEW,0,0)
+            #debug "\n"
+            #declare Cache[ANEW][BNEW] = CubeArrangement[X][Y][Z];
+        #end
+        #debug "\n"
+    #end
+    
+    
+    #debug "\n"
+    #debug "Schreibe aus Cache\n"
+    
+    #for(A, 0, 2, 1)
+        #for(B, 0, 2, 1)
+                
+            #declare X = -1;
+            #declare Y = -1;
+            #declare Z = -1;
+            Location(X,Y,Z,A,B,Seite,Entfernung)
+            #declare ANEW = -1;
+            #declare BNEW = -1;
+            #switch (SPALTE[Seite][Entfernung])
+                #case(0)
+                #case(1)
+                #case(2)
+                    #declare ANEW = -1*(A-2);
+                    #declare BNEW = -1*(B-2);
+                #break
+                #case(3)
+                #case(4)
+                #case(5)
+                    #declare ANEW = -1*(A-2);
+                    #declare BNEW = -1*(B-2);
+                #break
+                #case(6)
+                #case(7)
+                #case(8)
+                    #declare ANEW = A;
+                    #declare BNEW = B;
+                #break
+            #end
+            #declare CubeArrangement[X][Y][Z] = Cache[ANEW][BNEW];
+            
+            #debug "Cube Nr:"
+            #debug str(CubeArrangement[X][Y][Z],3,0)
+            #debug "  \n"
+            #debug str(A,0,0)
+            #debug str(B,0,0)
+            #debug " --> "
+            #debug str(X,0,0)
+            #debug "-"
+            #debug str(Y,0,0)
+            #debug "-"
+            #debug str(Z,0,0)
+            #debug "\n"
+        #end
+        #debug "\n"
+    #end
+    
+#end
+
 // Rotiert eine komplette Ebene
 #macro RotateLevel(Seite,Entfernung, Rotation, CubeArrangement)
     #debug "\n"
@@ -372,9 +567,9 @@
             RotateCube(CubeArrangement[X][Y][Z],Seite, Rotation)
         #end
     #end
-    //#debug "\n"
-    //UpdateCubeArrangement(Seite, Entfernung,Rotation,CubeArrangement)
-    //#debug "\n\n"
+    #debug "\n"
+    UpdateCubeArrangement(Seite, Entfernung,Rotation,CubeArrangement,Cache)
+    #debug "\n\n"
 #end
 
 // Rotiert eine komplette Ebene, in Abhängigkeit von der Zeit (Clock)
@@ -390,13 +585,56 @@
     #declare CStart = CStart + 1;
 #end
 
+
+#macro Debug_CubeArrangement()
+    #debug "\n"
+    #debug "Cube Arrangement\n"
+    #for(X, 0, 2, 1)
+        #for(Y, 0, 2, 1)
+            #for(Z, 0, 2, 1)
+                #debug str(X,0,0)
+                #debug "-"
+                #debug str(Y,0,0)
+                #debug "-"
+                #debug str(Z,0,0)
+                #debug " -- "
+                #debug "Cube Nr:"
+                #debug str(CubeArrangement[X][Y][Z],3,0)
+                #debug "  \n"
+            #end
+        #end
+    #end
+#end
+
+#macro Debug_Cache()
+    #debug "\n"
+    #debug "Cache\n"
+    #for(A, 0, 2, 1)
+        #for(B, 0, 2, 1)
+                #debug str(X,0,0)
+                #debug "-"
+                #debug str(Y,0,0)
+                #debug "-"
+                #debug str(Z,0,0)
+                #debug " -- "
+                #debug "Cube Nr:"
+                #debug str(CubeArrangement[X][Y][Z],3,0)
+                #debug "  \n"
+        #end
+    #end
+#end
+    
+
 Init(Cube,CubeArrangement)
 
-#declare X = -1;
-#declare Y = -1;
-#declare Z = -1;
-
 RotateLevelTime(SEITE_RECHTS,0,ROTATION_COUNTERCLOCK,CubeArrangement, CStart, clock)
+RotateLevelTime(SEITE_OBEN,2,ROTATION_CLOCK,CubeArrangement, CStart, clock)
+RotateLevelTime(SEITE_LINKS,1,ROTATION_COUNTERCLOCK,CubeArrangement, CStart, clock)
+RotateLevelTime(SEITE_OBEN,0,ROTATION_CLOCK,CubeArrangement, CStart, clock)
+RotateLevelTime(SEITE_LINKS,2,ROTATION_CLOCK,CubeArrangement, CStart, clock)
+RotateLevelTime(SEITE_RECHTS,2,ROTATION_COUNTERCLOCK,CubeArrangement, CStart, clock)
+RotateLevelTime(SEITE_LINKS,1,ROTATION_CLOCK,CubeArrangement, CStart, clock)
+
 Anzeigen_Cube()
 
 
