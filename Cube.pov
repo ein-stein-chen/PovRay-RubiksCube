@@ -158,9 +158,12 @@
 
 // Schreib die Würfel in das Cube Array, und speichert die IDs in dem CubeArrangement Array
 #macro AssignArray(Cube, CubeArrangement, Grundstruktur)
-    #debug " \n"
-    #debug "AssignArray \n"
-    #debug " \n"
+    
+    #if(Debug_Init)
+        #debug " \n"
+        #debug "AssignArray \n"
+    #end
+    
     #declare I = 0;
     #for(X, 0, 2, 1)
         #for(Y, 0, 2, 1)
@@ -170,14 +173,14 @@
                 #declare CubeArrangement[X][Y][Z] = I;
                 
                 #if(Debug_Init)
+                    #debug str(X,0,0)
+                    #debug "-"
+                    #debug str(Y,0,0)
+                    #debug "-"
+                    #debug str(Z,0,0)
+                    #debug " -- "
                     #debug "Cube Nr:"
                     #debug str(CubeArrangement[X][Y][Z],3,0)
-                    #debug "  \n"
-                    #debug str(X,0,0)
-                    #debug " - "
-                    #debug str(Y,0,0)
-                    #debug " - "
-                    #debug str(Z,0,0)
                     #debug "  \n"
                 #end
                 
@@ -343,8 +346,10 @@
         #end
 #end
 
-
+// Rotiert eine komplette Ebene
 #macro RotateLevel(Seite,Entfernung, Rotation, CubeArrangement)
+    #debug "\n"
+    #debug "Rotation: \n"
     #for(A, 0, 2, 1)
         #for(B, 0, 2, 1)
             #declare X = -1;
@@ -353,15 +358,15 @@
             Location(X,Y,Z,A,B,Seite,Entfernung)
             
             #if(Debug_RotateLevel)
-                #debug "\n"
-                #debug "Rotation: \n"
                 #debug str(X,0,0)
-                #debug " - "
+                #debug "-"
                 #debug str(Y,0,0)
-                #debug " - "
+                #debug "-"
                 #debug str(Z,0,0)
-                #debug "  \n"
+                #debug " -- "
+                #debug "Cube Nr: "
                 #debug str(CubeArrangement[X][Y][Z],0,0)
+                #debug "\n"
             #end
             
             RotateCube(CubeArrangement[X][Y][Z],Seite, Rotation)
@@ -372,13 +377,26 @@
     //#debug "\n\n"
 #end
 
+// Rotiert eine komplette Ebene, in Abhängigkeit von der Zeit (Clock)
+#macro RotateLevelTime(Seite,Entfernung,Rotation,CubeArrangement,CStart,Clock)
+    #if(Clock >= CStart & Clock < (CStart + 1))
+        #declare RotationNew = Rotation * (Clock - CStart);
+        RotateLevel(Seite,Entfernung,RotationNew,CubeArrangement)
+    #else
+        #if(Clock >= (CStart + 1))
+            RotateLevel(Seite,Entfernung,Rotation,CubeArrangement)
+        #end
+    #end
+    #declare CStart = CStart + 1;
+#end
+
 Init(Cube,CubeArrangement)
 
 #declare X = -1;
 #declare Y = -1;
 #declare Z = -1;
 
-RotateLevel(SEITE_OBEN,0,ROTATION_CLOCK,CubeArrangement)
+RotateLevelTime(SEITE_RECHTS,0,ROTATION_COUNTERCLOCK,CubeArrangement, CStart, clock)
 Anzeigen_Cube()
 
 
