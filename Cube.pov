@@ -8,7 +8,12 @@
 #declare Debug_Init = 0;
 #declare Debug_RotateLevel = 0;
 #declare Debug_UpdateCubeArrangement = 0;
-#declare Debug_Zufall = 1;
+#declare Debug_Zufall = 0;
+
+// Mittelpunkt des Wuerfels
+#declare MidX = 0;
+#declare MidY = 0;
+#declare MidZ = 0;
 
 // Statische Variablen
 #declare SEITE_RECHTS = 0;
@@ -67,9 +72,10 @@
 
 // Initialisiert die Umgebung
 #macro InitSetting()
-
+    
     #debug "\n"
-    #debug "Initialisiere Setting \n"
+    #debug "Initialisiere Setting\n"
+    #debug "\n"
 
     camera {
         //orthographic
@@ -108,7 +114,7 @@
             #for(Z, 0, 2, 1)
                 #declare Grundstruktur[X][Y][Z] = object {
                     Wuerfel
-                    translate <X-1,Y-1,Z-1>
+                    translate <X-1+MidX,Y-1+MidY,Z-1+MidZ>
                 }
             #end
         #end
@@ -137,22 +143,22 @@
                     
                     #switch (SeitenNr)
                         #case (0)
-                            translate <1.5,A-1,B-1>
+                            translate <1.5+MidX,A-1+MidY,B-1+MidZ>
                         #break
                         #case (1)
-                            translate <-1.5,A-1,B-1>
+                            translate <-1.5+MidX,A-1+MidY,B-1+MidZ>
                         #break
                         #case (2)
-                            translate <B-1,A-1,1.5>
+                            translate <B-1+MidX,A-1+MidY,1.5+MidZ>
                         #break
                         #case (3)
-                            translate <B-1,A-1,-1.5>
+                            translate <B-1+MidX,A-1+MidY,-1.5+MidZ>
                         #break
                         #case (4)
-                            translate <B-1,1.5,A-1>
+                            translate <B-1+MidX,1.5+MidY,A-1+MidZ>
                         #break
                         #case (5)
-                            translate <B-1,-1.5,A-1>
+                            translate <B-1+MidX,-1.5+MidY,A-1+MidZ>
                         #break
                     #end
                 }
@@ -173,7 +179,7 @@
     
     #if(Debug_Init)
         #debug " \n"
-        #debug "AssignArray \n"
+        #debug "AssignArray\n"
     #end
     
     #declare I = 0;
@@ -291,6 +297,7 @@
 #macro RotateCube(Number, Direktion, Rotation)
     #declare Cube [Number] = object {
         Cube[Number]
+        translate <-MidX,-MidY,-MidZ>
         #switch(Direktion)
         #case (0)
             rotate <0,0,Rotation * 90>
@@ -302,6 +309,7 @@
             rotate <0,Rotation * 90,0>
         #break
         #end
+        translate <MidX,MidY,MidZ>
     }
 #end
 
@@ -568,7 +576,7 @@
 
     #if(Debug_RotateLevel)
         #debug "\n"
-        #debug "Rotation: \n"
+        #debug "Rotation:\n"
     #end
 
     #for(A, 0, 2, 1)
@@ -647,21 +655,26 @@
     #debug "Cache\n"
     #for(A, 0, 2, 1)
         #for(B, 0, 2, 1)
-                #debug str(X,0,0)
-                #debug "-"
-                #debug str(Y,0,0)
-                #debug "-"
-                #debug str(Z,0,0)
-                #debug " -- "
-                #debug "Cube Nr:"
-                #debug str(CubeArrangement[X][Y][Z],3,0)
-                #debug "  \n"
+            #debug str(X,0,0)
+            #debug "-"
+            #debug str(Y,0,0)
+            #debug "-"
+            #debug str(Z,0,0)
+            #debug " -- "
+            #debug "Cube Nr:"
+            #debug str(CubeArrangement[X][Y][Z],3,0)
+            #debug "  \n"
         #end
     #end
 #end
 
 // Generiert N zufällige Rotationen hintereinander
 #macro Zufall(N)
+    
+    #if(Debug_Zufall)
+        #debug "Zufallszahlen fuer die Verdrehungen ausgeben:\n"
+    #end
+
     #for(i,1,N,1)
         #declare SeiteNummer = floor(rand(R)*3);
 
@@ -679,6 +692,10 @@
         #end
 
         RotateLevelTime(SeiteNummer,EbeneNummer,RotationNummer,CubeArrangement, CStart, clock)
+    #end
+    
+    #if(Debug_Zufall)
+        #debug "\n"
     #end
 #end
 
